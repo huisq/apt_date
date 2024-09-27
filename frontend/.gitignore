@@ -1,6 +1,7 @@
 # Aptos related files
 .aptos
 .env
+.vite
 contract/build
 
 # Logs
