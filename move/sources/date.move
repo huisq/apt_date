@@ -16,6 +16,9 @@ module admin::date {
     use std::object;
     use aptos_std::smart_vector::{Self, SmartVector};
     use aptos_framework::timestamp;
+    use aptos_token_objects::property_map;
+    use std::bcs;
+    use std::vector;
 
     #[test_only]
     use std::debug;
@@ -41,6 +44,15 @@ module admin::date {
     const COLLECTION_DESCRIPTION: vector<u8> = b"find your perfect match powered by the Aptos blockchain";
     const COLLECTION_URI: vector<u8> = b"ipfs://tbc";
 
+    const PROPERTY_KEY: vector<vector<u8>> = vector[
+        b"PROFILE_NAME",
+        b"AGE",
+        b"GENDER",
+        b"SEEKING",
+        b"PROFILE DESCRIPTION",
+        b"TELEGRAM"
+    ];
+
     //==============================================================================================
     // Module Structs
     //==============================================================================================
@@ -52,13 +64,15 @@ module admin::date {
         mutator_ref: token::MutatorRef,
         // Used for burning the token
         burn_ref: token::BurnRef,
-        // profile details
-        name: String,
-        age: u8,
-        gender: bool, //0=women, 1=men
-        seeking: u8, //0=women, 1=men, 2=both
-        description: String, //limit to 100 words
-        tg: String,
+        // Used for editing the token's property_map
+        property_mutator_ref: property_map::MutatorRef,
+        // // profile details
+        // name: String,
+        // age: u8,
+        // gender: bool, //0=women, 1=men
+        // seeking: u8, //0=women, 1=men, 2=both
+        // description: String, //limit to 100 words
+        // tg: String,
     }
 
     /*
@@ -172,16 +186,47 @@ module admin::date {
         // Transfer the token to the user account
         object::transfer_raw(&res_signer, obj_add, user_add);
 
+        let prop_keys = vector[
+            string::utf8(*vector::borrow(&PROPERTY_KEY,0)),
+            string::utf8(*vector::borrow(&PROPERTY_KEY,1)),
+            string::utf8(*vector::borrow(&PROPERTY_KEY,2)),
+            string::utf8(*vector::borrow(&PROPERTY_KEY,3)),
+            string::utf8(*vector::borrow(&PROPERTY_KEY,4)),
+            string::utf8(*vector::borrow(&PROPERTY_KEY,5))
+        ];
+
+        let prop_types = vector[
+            string::utf8(b"0x1::string::String"),
+            string::utf8(b"u8"),
+            string::utf8(b"bool"),
+            string::utf8(b"u8"),
+            string::utf8(b"0x1::string::String"),
+            string::utf8(b"0x1::string::String"),
+        ];
+
+        let prop_values = vector[
+            bcs::to_bytes(&name),
+            bcs::to_bytes(&age),
+            bcs::to_bytes(&gender),
+            bcs::to_bytes(&seeking),
+            bcs::to_bytes(&description),
+            bcs::to_bytes(&tg)
+        ];
+
+        let token_prop_map = property_map::prepare_input(prop_keys,prop_types,prop_values);
+        property_map::init(&token_const_ref,token_prop_map);
+
         // Create the Profile Token object and move it to the new token object signer
         let profile = Profile {
             mutator_ref: token::generate_mutator_ref(&token_const_ref),
             burn_ref: token::generate_burn_ref(&token_const_ref),
-            name,
-            age,
-            gender, //1 for men
-            seeking, //1 for men
-            description, //limit to 100 words
-            tg,
+            property_mutator_ref: property_map::generate_mutator_ref(&token_const_ref),
+            // name,
+            // age,
+            // gender, //1 for men
+            // seeking, //1 for men
+            // description, //limit to 100 words
+            // tg,
         };
 
         move_to<Profile>(&obj_signer, profile);
@@ -220,20 +265,25 @@ module admin::date {
     entry fun match(
         user: &signer,
         profile: address,
-    )acquires State, Profile {
+    )acquires State {
         let state = borrow_global_mut<State>(@admin);
         let user_add = signer::address_of(user);
-        let user_profile = borrow_global_mut<Profile>(profile);
         assert!(object::is_owner(object::address_to_object<Profile>(profile), user_add), ERROR_NOT_OWNER);
         let matched=@0x0;
         //bi
-        if(user_profile.seeking == 2){
+        let seeking = property_map::read_u8<Profile>(&object::address_to_object<Profile>(profile), &string::utf8(*PROPERTY_KEY.borrow(
+            3
+        )));
+        let gender = property_map::read_bool<Profile>(&object::address_to_object<Profile>(profile), &string::utf8(*PROPERTY_KEY.borrow(
+            2
+        )));
+        if(seeking == 2){
             if(state.mf2.length()!=0){
                 let index = randomness::u64_range(0, state.mf2.length());
                 matched = *state.mf2.borrow(index);
             }
-        }else if(user_profile.seeking == 1){
-            if(user_profile.gender) {
+        }else if(seeking == 1){
+            if(gender) {
                 //11
                 if (state.m1.length() != 0) {
                     let index = randomness::u64_range(0, state.m1.length());
@@ -247,7 +297,7 @@ module admin::date {
                 }
             }
         }else{
-            if(user_profile.gender) {
+            if(gender) {
                 //10
                 if (state.m0.length() != 0) {
                     let index = randomness::u64_range(0, state.m0.length());
