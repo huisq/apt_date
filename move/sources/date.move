@@ -148,13 +148,13 @@ module admin::date {
         assert!(!state.users.contains(&user_add), ERROR_USER_EXISTED);
         let res_signer = account::create_signer_with_capability(&state.signer_cap);
         let token_name = string_utils::format2(&b"#{}:{}", state.users.length(), name);
-        let self = if(gender){b"man"}else{b"woman"};
+        let self = if(gender){string::utf8(b"man")}else{string::utf8(b"woman")};
         let seek = if(seeking == 0){
-            b"woman"
+            string::utf8(b"woman")
         }else if(seeking == 1){
-            b"man"
+            string::utf8(b"man")
         }else{
-            b"bi"
+            string::utf8(b"bi")
         };
         let token_des = string_utils::format4(&b"#{},{},{} seeking {}", name, age, self, seek);
         // Create a new named token:
@@ -286,6 +286,12 @@ module admin::date {
             &signer::address_of(&account::create_signer_with_capability(&state.signer_cap)),
             &string::utf8(COLLECTION_NAME)
         )
+    }
+
+    #[view]
+    public fun check_profile_exists(user: address): bool acquires State{
+        let state = borrow_global_mut<State>(@admin);
+        state.users.contains(&user)
     }
 
     //==============================================================================================
