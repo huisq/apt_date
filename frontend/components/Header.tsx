@@ -10,7 +10,7 @@ import { Link } from 'react-router-dom';
 
 export function Header() {
   const { i18n } = useTranslation();
-  const [loadedText] = useState('Aptos Date')
+  const [loadedText] = useState('Apt Date')
   const { network } = useWallet();
   
   const changeLanguage = (lng:string) => {
