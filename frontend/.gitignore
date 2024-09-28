@@ -3,6 +3,7 @@
 .env
 .vite
 contract/build
+node_modules
 
 # Logs
 logs
@@ -13,7 +14,6 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
 dist
 build
 dist-ssr
