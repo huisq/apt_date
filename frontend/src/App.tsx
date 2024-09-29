@@ -5,7 +5,7 @@ import { HomeInfo } from "@/components/HomeInfo";
 import { AddProfile } from "@/components/AddProfile";
 import { Soulmate } from "@/pages/Soulmate"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import '@fontsource/pacifico';
 import '@fontsource/roboto';
 import { BrowserRouter as Router, Route, Routes, useNavigate } from 'react-router-dom';
@@ -117,14 +117,16 @@ function AppContent() {
 
 function App() {
   return (
-    <WalletSelectorProvider>
-      <Router>
-        <Routes>
-          <Route path="/" element={<AppContent />} />
-          <Route path="/soulmate/:id" element={<Soulmate />} />
-        </Routes>
-      </Router>
-    </WalletSelectorProvider>
+    <Suspense fallback={<FullScreenLoading />}>
+      <WalletSelectorProvider>
+        <Router>
+          <Routes>
+            <Route path="/" element={<AppContent />} />
+            <Route path="/soulmate/:id" element={<Soulmate />} />
+          </Routes>
+        </Router>
+      </WalletSelectorProvider>
+    </Suspense>
   );
 }
 

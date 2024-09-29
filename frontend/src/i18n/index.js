@@ -9,13 +9,14 @@ i18n
   .use(initReactI18next)
   .init({
     fallbackLng: 'en',
+    supportedLngs: ['en', 'zh'],
     debug: true,
     interpolation: {
       escapeValue: false, // not needed for react as it escapes by default
     },
     backend: {
-      loadPath: './i18n/{{lng}}/{{ns}}.json',
-    },
+      loadPath: '/i18n/{{lng}}/{{ns}}.json',
+    }
   });
 
 export default i18n;
