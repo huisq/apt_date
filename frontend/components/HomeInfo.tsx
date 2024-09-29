@@ -33,13 +33,14 @@ interface HomeInfoProps {
 }
 
 export function HomeInfo({ onFindSoulmate }: HomeInfoProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [loadedText] = useState('Apt Date');
   const [typedSlogan, setTypedSlogan] = useState('');
   const [sloganIndex, setSloganIndex] = useState(0);
   const [charIndex, setCharIndex] = useState(0);
   const [showChevron, setShowChevron] = useState(true);
   const { scrollY } = useScroll();
+  const [currentLanguage, setCurrentLanguage] = useState(i18n.language);
 
   useMotionValueEvent(scrollY, "change", (latest) => {
     const windowHeight = window.innerHeight;
@@ -54,6 +55,12 @@ export function HomeInfo({ onFindSoulmate }: HomeInfoProps) {
   });
 
   useEffect(() => {
+    if (i18n.language !== currentLanguage) {
+      setTypedSlogan('');
+      setCharIndex(0);
+      setCurrentLanguage(i18n.language);
+    }
+
     if (charIndex < t(slogans[sloganIndex]).length) {
       const timer = setTimeout(() => {
         setTypedSlogan(prev => prev + t(slogans[sloganIndex])[charIndex]);
