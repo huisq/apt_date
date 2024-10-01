@@ -278,9 +278,35 @@ module admin::date {
             2
         )));
         if(seeking == 2){
-            if(state.mf2.length()!=0){
+            if(state.mf2.length() > 1){
                 let index = randomness::u64_range(0, state.mf2.length());
                 matched = *state.mf2.borrow(index);
+                if(matched == user_add){
+                    if(state.mf2.length() == 2){
+                        if(index == 0){
+                            matched = *state.mf2.borrow(1);
+                        }else{
+                            matched = *state.mf2.borrow(0);
+                        }
+                    }else{
+                        if(index == 0){
+                            index = randomness::u64_range(1, state.mf2.length());
+                            matched = *state.mf2.borrow(index);
+                        }else if(index == state.mf2.length()-1){
+                            index = randomness::u64_range(1, state.mf2.length()-1);
+                            matched = *state.mf2.borrow(index);
+                        }else{
+                            let left = randomness::u64_range(0, index);
+                            let right = randomness::u64_range(index + 1, state.mf2.length());
+                            let rand = randomness::u64_range(0, 2);
+                            if(rand == 0){
+                                matched = *state.mf2.borrow(left);
+                            }else{
+                                matched = *state.mf2.borrow(right);
+                            }
+                        }
+                    };
+                }
             }
         }else if(seeking == 1){
             if(gender) {
