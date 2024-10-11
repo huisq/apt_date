@@ -173,7 +173,7 @@ export const Soulmate: React.FC = () => {
     <div className="w-screen min-h-screen bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 overflow-hidden">
       <Header />
       {isFullScreenLoading && <FullScreenLoading />}
-      <div className="w-full flex justify-center items-center pt-12">
+      <div className="w-full flex justify-center items-center pt-10">
         {isLoading ? (
           <FullScreenLoading />
         ) : !profileData ? (
