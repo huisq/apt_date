@@ -4,7 +4,7 @@ import { MODULE_ADDRESS } from "@/constants";
 export type MintProfileArguments = {
   name: string,
   age: number,
-  gender: number,
+  gender: boolean,
   seeking: number,
   description: string,
   tg: string,

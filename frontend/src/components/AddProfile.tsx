@@ -153,7 +153,7 @@ export function AddProfile() {
       const payload = mintProfile({
         name: data.nickname,
         age: data.age,
-        gender: parseInt(data.gender),
+        gender: data.gender === '0' ? false : true,
         seeking: parseInt(data.seeking),
         description: data.about || "",
         tg: data.telegram || "",
