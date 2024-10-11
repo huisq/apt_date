@@ -317,17 +317,17 @@ module admin::date {
                 }
             }
             else{ //01
-                if(state.f1.length()!=0){
-                    let index = randomness::u64_range(0, state.f1.length());
-                    matched = *state.f1.borrow(index);
+                if(state.m0.length()!=0){
+                    let index = randomness::u64_range(0, state.m0.length());
+                    matched = *state.m0.borrow(index);
                 }
             }
         }else{
             if(gender) {
                 //10
-                if (state.m0.length() != 0) {
-                    let index = randomness::u64_range(0, state.m0.length());
-                    matched = *state.m0.borrow(index);
+                if (state.f1.length() != 0) {
+                    let index = randomness::u64_range(0, state.f1.length());
+                    matched = *state.f1.borrow(index);
                 }
             }
             else{ //00
