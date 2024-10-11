@@ -78,7 +78,7 @@ export function HomeInfo({ onFindSoulmate }: HomeInfoProps) {
   }, [charIndex, sloganIndex, t]);
 
   return (
-    <div className='text-white'>
+    <div className='text-white px-4'>
       <div className="text-center overflow-visible pt-40 pb-20">
         <motion.h1
           style={{ fontFamily: 'Pacifico, cursive' }}

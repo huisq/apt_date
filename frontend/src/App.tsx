@@ -81,7 +81,7 @@ function AppContent() {
   };
 
   return (
-    <div className="w-screen min-h-screen bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 p-4 overflow-hidden">
+    <div className="w-screen min-h-screen bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 overflow-hidden">
       {isFullScreenLoading && <FullScreenLoading />}
       <Header />
       {isAddProfile ? <AddProfile /> : <HomeInfo onFindSoulmate={handleFindSoulmate} />}

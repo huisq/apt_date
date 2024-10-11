@@ -18,7 +18,7 @@ export function Header() {
   };
 
   return (
-    <div className="flex items-center justify-between px-4 py-2 max-w-screen-2xl mx-auto w-full flex-wrap">
+    <div className="flex items-center justify-between p-4 sm:px-8 sm:pt-6 sm:pb-2 max-w-screen-2xl mx-auto w-full flex-nowrap">
       <div className='flex flex-col gap-2 md:gap-3'>
         <Link to="/">
           <motion.h1 
@@ -64,13 +64,25 @@ export function Header() {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-        {
-          network && (
+        {network && (
+          <>
             <div className="bg-white/10 py-1.5 px-3 rounded-xl cursor-pointer text-white hidden md:block">
               Aptos {network.name}
             </div>
-          )
-        }
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild className="focus:outline-none md:hidden">
+                <button className="bg-white/10 p-2 rounded-xl cursor-pointer hover:opacity-90">
+                  <Icon icon="material-symbols:network-manage" className="text-white h-5 w-5" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem>
+                  Aptos {network.name}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </>
+        )}
         <WalletSelector />
       </div>
     </div>

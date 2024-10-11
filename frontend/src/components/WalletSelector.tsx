@@ -186,7 +186,7 @@ function ConnectWalletDialog({ close }: ConnectWalletDialogProps) {
           {availableWallets.map((wallet) => (
             <WalletRow key={wallet.name} wallet={wallet} onConnect={close} />
           ))}
-          {!!installableWallets.length && (
+          {!!installableWallets.length && !isTelegramMiniApp && (
             <Collapsible className="flex flex-col gap-3">
               <CollapsibleTrigger asChild>
                 <Button size="sm" variant="ghost" className="gap-2">
