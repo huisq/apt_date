@@ -11,7 +11,13 @@ export function WalletProvider({ children }: PropsWithChildren) {
   return (
     <AptosWalletAdapterProvider
       autoConnect={true}
-      dappConfig={{ network: NETWORK }}
+      dappConfig={{
+        network: NETWORK,
+        mizuwallet: {
+          manifestURL:
+            "https://apt-date.vercel.app/config/mizuwallet-connect-manifest.json",
+        },
+      }}
       optInWallets={["Continue with Google","Petra","Nightly","Pontem Wallet", "Mizu Wallet"]}
       onError={(error) => {
         toast({
