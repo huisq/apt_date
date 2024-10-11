@@ -7,7 +7,7 @@ import '@fontsource/roboto';
 import { useTranslation } from 'react-i18next';
 
 const slogans = [
-  "connect_with_friends_and_professionals",
+  // "connect_with_friends_and_professionals",
   "discover_meaningful_relationships",
   "everything_you_are_in_one_simple_link_in_bio",
   "the_fast_friendly_and_powerful_link_in_bio_tool"

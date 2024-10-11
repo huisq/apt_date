@@ -65,7 +65,11 @@ export function Header() {
           </DropdownMenuContent>
         </DropdownMenu>
         {
-          network && <div className="bg-white/10 py-1.5 px-3 rounded-xl cursor-pointer text-white">Aptos {network.name}</div>
+          network && (
+            <div className="bg-white/10 py-1.5 px-3 rounded-xl cursor-pointer text-white hidden md:block">
+              Aptos {network.name}
+            </div>
+          )
         }
         <WalletSelector />
       </div>
