@@ -1,6 +1,7 @@
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { cn } from "@/lib/utils";
 import { Header } from "@/components/Header";
+import Footer from "@/components/Footer";
 import { HomeInfo } from "@/components/HomeInfo";
 import { AddProfile } from "@/components/AddProfile";
 import { Soulmate } from "@/pages/Soulmate"
@@ -85,9 +86,7 @@ function AppContent() {
       {isFullScreenLoading && <FullScreenLoading />}
       <Header />
       {isAddProfile ? <AddProfile /> : <HomeInfo onFindSoulmate={handleFindSoulmate} />}
-      <footer className="text-center py-8 text-white">
-        <p>{t("copyright_notice", { year: 2024 })}</p>
-      </footer>
+      <Footer />
       <AlertDialog open={showProfileAlert} onOpenChange={setShowProfileAlert}>
         <AlertDialogContent>
           <AlertDialogHeader>

@@ -5,6 +5,7 @@ import { Icon } from '@iconify/react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getProfile } from '@/view-functions/getProfile';
 import { Header } from "@/components/Header";
+import Footer from "@/components/Footer";
 import FullScreenLoading from '@/components/FullScreenLoading';
 import { Button } from "@/components/ui/button";
 import { Toast } from "@/components/ui/toast";
@@ -327,6 +328,9 @@ export const Soulmate: React.FC = () => {
       >
         <HelpCircle className="h-6 w-6 text-white" />
       </Button>
+      <div className='fixed bottom-[-1rem] left-0 right-0 flex justify-center'>
+        <Footer />
+      </div>
     </div>
   );
 };

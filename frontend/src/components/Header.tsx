@@ -62,6 +62,15 @@ export function Header() {
             <DropdownMenuItem onClick={() => changeLanguage('zh')}>
               简体中文
             </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => changeLanguage('zh-TW')}>
+              繁體中文
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => changeLanguage('ja')}>
+              日本語
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => changeLanguage('ko')}>
+              한국어
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
         {network && (
