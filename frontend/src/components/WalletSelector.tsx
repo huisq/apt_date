@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/components/ui/use-toast";
 import { useTranslation } from 'react-i18next';
+import WebApp from '@twa-dev/sdk';
 
 interface WalletSelectorContextType {
   isDialogOpen: boolean;
@@ -32,6 +33,8 @@ interface WalletSelectorContextType {
 }
 
 const WalletSelectorContext = createContext<WalletSelectorContextType | undefined>(undefined);
+
+const isTelegramMiniApp = !!WebApp.initData;
 
 export const WalletSelectorProvider: React.FC<React.PropsWithChildren<{}>> = ({ children }) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -137,10 +140,14 @@ function ConnectWalletDialog({ close }: ConnectWalletDialogProps) {
         <DialogHeader>
           <DialogTitle className="flex flex-col text-center leading-snug">
             {hasAptosConnectWallets ? (
-              <>
+              isTelegramMiniApp ? (
                 <span>{t('log_in_or_sign_up')}</span>
-                <span>{t('with_social_aptos_connect')}</span>
-              </>
+              ) : (
+                <>
+                  <span>{t('log_in_or_sign_up')}</span>
+                  <span>{t('with_social_aptos_connect')}</span>
+                </>
+              )
             ) : (
               t('connect_wallet')
             )}
@@ -148,7 +155,7 @@ function ConnectWalletDialog({ close }: ConnectWalletDialogProps) {
         </DialogHeader>
         <DialogDescription></DialogDescription>
 
-        {hasAptosConnectWallets && (
+        {hasAptosConnectWallets && !isTelegramMiniApp && (
           <div className="flex flex-col gap-2 pt-3">
             {aptosConnectWallets.map((wallet) => (
               <AptosConnectWalletRow key={wallet.name} wallet={wallet} onConnect={close} />
