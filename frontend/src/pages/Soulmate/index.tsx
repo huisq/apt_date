@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
-import { Heart, ChevronRight, Loader2 } from 'lucide-react';
+import { Heart, ChevronRight, Loader2, HelpCircle } from 'lucide-react';
 import { Icon } from '@iconify/react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getProfile } from '@/view-functions/getProfile';
@@ -10,16 +10,26 @@ import { Button } from "@/components/ui/button";
 import { Toast } from "@/components/ui/toast";
 import { useToast } from "@/components/ui/use-toast";
 import { useTranslation } from 'react-i18next';
+import { useWallet } from "@aptos-labs/wallet-adapter-react";
+import { checkProfileExists } from '@/view-functions/checkProfileExists';
+import { match } from "@/entry-functions/match"
+import { getTransaction } from "@/view-functions/getTransaction";
+import { MODULE_ADDRESS } from "@/constants";
+import { getExistProfileId } from "@/view-functions/getExistProfileId"
 
 export const Soulmate: React.FC = () => {
   const { t } = useTranslation();
   const [profileData, setProfileData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isFullScreenLoading, setIsFullScreenLoading] = useState(false);
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [isHovered, setIsHovered] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const { account, connected, signAndSubmitTransaction } = useWallet();
+  const [showTips, setShowTips] = useState(false);
+  const [toastInstance, setToastInstance] = useState<ReturnType<typeof toast> | null>(null)
 
   useEffect(() => {
     const fetchProfileData = async () => {
@@ -46,65 +56,66 @@ export const Soulmate: React.FC = () => {
       }
     };
     fetchProfileData();
-  }, [id]);
+  }, [id, navigate, toast]);
 
-  // useEffect(() => {
-  //   const fetchProfileData = async () => {
-  //     setIsLoading(true);
-  //     try {
-  //       const profileData = await getProfile(id || '');
-  //       if (profileData && profileData.token_properties) {
-  //         const properties = profileData.token_properties;
-  //         setProfileData({
-  //           AGE: properties.AGE,
-  //           GENDER: properties.GENDER,
-  //           TELEGRAM: properties.TELEGRAM,
-  //           PROFILE_NAME: properties.PROFILE_NAME,
-  //           PROFILE_DESCRIPTION: properties["PROFILE DESCRIPTION"],
-  //           token_uri: profileData.token_uri
-  //         });
-  //       } else {
-  //         console.error('Profile data not found or invalid');
-  //       }
-  //     } catch (error) {
-  //       console.error('Error fetching profile data:', error);
-  //     } finally {
-  //       setIsLoading(false);
-  //     }
-  //   };
-  //   fetchProfileData();
-
-  //   const timer = setTimeout(() => {
-  //     toast({
-  //       title: "Enhance Your Experience",
-  //       description: (
-  //         <div>
-  //           <p>Complete your profile or unlock premium features for more matching opportunities!</p>
-  //           <div className="mt-2">
-  //             <button 
-  //               onClick={() => navigate('/edit-profile')} 
-  //               className="text-blue-500 hover:underline mr-4"
-  //             >
-  //               Edit Profile
-  //             </button>
-  //             <button 
-  //               onClick={() => {
-  //                 // Call API to upgrade to premium version here
-  //                 console.log('Calling API to upgrade to premium version');
-  //               }}
-  //               className="text-purple-500 hover:underline"
-  //             >
-  //               Upgrade to Premium
-  //             </button>
-  //           </div>
-  //         </div>
-  //       ),
-  //       duration: Infinity,
-  //     });
-  //   }, 3000);
-
-  //   return () => clearTimeout(timer);
-  // }, [id, navigate, toast]);
+  const handleFindSoulmate = async () => {
+    console.log('dsada', connected);
+    if (!connected) {
+      toast({
+        title: t("error"),
+        description: t("wallet_not_connected"),
+        variant: "destructive",
+      });
+    } else {
+      try {
+        setIsFullScreenLoading(true);
+        const exists = await checkProfileExists({ accountAddress: connected ? account?.address?.toString() || '' : '' });
+        if (exists === true) {
+          const profileId = await getExistProfileId({ accountAddress: connected ? account?.address?.toString() || '' : '' });
+          if (profileId) {
+            const payload = match({ profile: profileId });
+            const response = await signAndSubmitTransaction(payload);
+            console.log('Match transaction response:', response);
+            const res = await getTransaction(response?.hash || "");
+            if (res?.events && res?.events.length) {
+              const ev = res.events.find((i:any) => i.type === `${MODULE_ADDRESS}::date::MatchedEvent`);
+              if (ev.data.match_found) {
+                navigate(`/soulmate/${ev.data.profileB}`);
+              } else {
+                toast({
+                  title: t("error"),
+                  description: t("failed_to_match_please_try_again"),
+                  variant: "destructive",
+                });
+              }
+            }
+          } else {
+            console.error('Failed to get profile ID');
+            toast({
+              title: t("error"),
+              description: t("failed_to_get_profile_id_please_try_again"),
+              variant: "destructive",
+            });
+          }
+        } else {
+          toast({
+            title: t("error"),
+            description: t("create_profile_before_finding_soulmate"),
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        console.error('Error during find soulmate process:', error);
+        toast({
+          title: t("error"),
+          description: t("an_error_occurred_please_try_again"),
+          variant: "destructive",
+        });
+      } finally {
+        setIsFullScreenLoading(false);
+      }
+    }
+  };
 
   const cardVariants = {
     hidden: { opacity: 0, rotateY: 720, scale: 0.5 },
@@ -123,10 +134,45 @@ export const Soulmate: React.FC = () => {
     }
   };
 
+  const toggleTips = () => {
+    setShowTips(!showTips);
+    if (!showTips) {
+      const newToast = toast({
+        title: "Tips",
+        description: (
+          <div className="text-2xs">
+            <p>
+              Haven't found the right person? <span 
+                className="text-pink-500 cursor-pointer hover:underline"
+                onClick={handleFindSoulmate}
+              >
+                <u className="cursor-pointer">Find</u>
+              </span> the next person quickly🔥, or get your card <span 
+                className="text-indigo-500 cursor-pointer hover:underline"
+                onClick={() => {
+                  // Get and copy link logic here
+                  console.log('Getting and copying link');
+                }}
+              >
+                <u className="cursor-pointer">Link</u>
+              </span> and share it on your favorite social media to find that special someone!
+            </p>
+          </div>
+        ),
+        duration: Infinity,
+      });
+      setToastInstance(newToast)
+    } else if (toastInstance) {
+      toastInstance.dismiss()
+      setToastInstance(null)
+    }
+  };
+
   return (
-    <div className="w-screen min-h-screen bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 p-4 overflow-hidden">
+    <div className="w-screen min-h-screen bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 overflow-hidden">
       <Header />
-      <div className="w-full h-[80vh] overflow-y-auto flex justify-center items-center">
+      {isFullScreenLoading && <FullScreenLoading />}
+      <div className="w-full flex justify-center items-center pt-12">
         {isLoading ? (
           <FullScreenLoading />
         ) : !profileData ? (
@@ -144,7 +190,7 @@ export const Soulmate: React.FC = () => {
               style={{ 
                 transformStyle: 'preserve-3d', 
                 transition: 'transform 0.3s ease',
-                transform: `rotateY(-10deg) ${isHovered ? 'scale(1.02)' : ''}`,
+                transform: `rotateY(-6deg) ${isHovered ? 'scale(1.02)' : ''}`,
               }}
               onMouseEnter={() => setIsHovered(true)}
               onMouseLeave={() => setIsHovered(false)}
@@ -175,7 +221,7 @@ export const Soulmate: React.FC = () => {
                   <div className="absolute inset-0 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 animate-flow"></div>
                 </div>
                 <div 
-                  className="relative w-full h-full flex flex-col justify-start items-center p-6 cursor-pointer overflow-y-auto"
+                  className="relative w-full h-full flex flex-col justify-start items-center p-6 px-8 cursor-pointer overflow-y-auto"
                   style={{
                     color: '#000000',
                     border: '2px solid #FFFFFF',
@@ -216,7 +262,7 @@ export const Soulmate: React.FC = () => {
                     }
                   </motion.h2>
                   <motion.p 
-                    className="text-lg mb-4 text-center w-full flex-shrink-0 text-gray-600"
+                    className="max-w-96 text-lg mb-4 text-center w-full flex-shrink-0 text-gray-600"
                     whileHover={{ scale: 1.05 }}
                   >
                     {profileData.PROFILE_DESCRIPTION || t('introduce_yourself')}
@@ -229,7 +275,7 @@ export const Soulmate: React.FC = () => {
                   >
                     {profileData.AGE && (
                       <motion.div 
-                        className="flex items-center p-3 bg-purple-100 rounded-lg" 
+                        className="flex items-center p-3 px-6 bg-purple-100 rounded-lg" 
                         whileHover={{ scale: 1.05 }}
                         initial={{ x: 300 }}
                         animate={{ x: 0 }}
@@ -241,7 +287,7 @@ export const Soulmate: React.FC = () => {
                     )}
                     {profileData.GENDER !== undefined && (
                       <motion.div 
-                        className="flex items-center p-3 bg-purple-100 rounded-lg" 
+                        className="flex items-center p-3 px-6 bg-purple-100 rounded-lg" 
                         whileHover={{ scale: 1.05 }}
                         initial={{ x: 300 }}
                         animate={{ x: 0 }}
@@ -256,7 +302,7 @@ export const Soulmate: React.FC = () => {
                         href={`https://t.me/${profileData.TELEGRAM}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center p-3 bg-purple-100 rounded-lg"
+                        className="flex items-center p-3 px-6 bg-purple-100 rounded-lg"
                         whileHover={{ scale: 1.05 }}
                         initial={{ x: 300 }}
                         animate={{ x: 0 }}
@@ -273,6 +319,14 @@ export const Soulmate: React.FC = () => {
           </motion.div>
         )}
       </div>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="fixed bottom-4 right-2 bg-transparent hover:bg-transparent hidden"
+        onClick={toggleTips}
+      >
+        <HelpCircle className="h-6 w-6 text-white" />
+      </Button>
     </div>
   );
 };
