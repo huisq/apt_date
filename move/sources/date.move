@@ -266,77 +266,98 @@ module admin::date {
         user: &signer,
         profile: address,
     )acquires State {
-        let state = borrow_global_mut<State>(@admin);
-        let user_add = signer::address_of(user);
-        assert!(object::is_owner(object::address_to_object<Profile>(profile), user_add), ERROR_NOT_OWNER);
+        let clashed = 4;
         let matched=@0x0;
-        //bi
-        let seeking = property_map::read_u8<Profile>(&object::address_to_object<Profile>(profile), &string::utf8(*PROPERTY_KEY.borrow(
-            3
-        )));
-        let gender = property_map::read_bool<Profile>(&object::address_to_object<Profile>(profile), &string::utf8(*PROPERTY_KEY.borrow(
-            2
-        )));
-        if(seeking == 2){
-            if(state.mf2.length() > 1){
-                let index = randomness::u64_range(0, state.mf2.length());
-                matched = *state.mf2.borrow(index);
-                if(matched == user_add){
-                    if(state.mf2.length() == 2){
-                        if(index == 0){
-                            matched = *state.mf2.borrow(1);
-                        }else{
-                            matched = *state.mf2.borrow(0);
+        let index= 100;
+        {
+            let state = borrow_global_mut<State>(@admin);
+            let user_add = signer::address_of(user);
+            assert!(object::is_owner(object::address_to_object<Profile>(profile), user_add), ERROR_NOT_OWNER);
+            //bi
+            let seeking = property_map::read_u8<Profile>(
+                &object::address_to_object<Profile>(profile),
+                &string::utf8(*PROPERTY_KEY.borrow(
+                    3
+                ))
+            );
+            let gender = property_map::read_bool<Profile>(
+                &object::address_to_object<Profile>(profile),
+                &string::utf8(*PROPERTY_KEY.borrow(
+                    2
+                ))
+            );
+            if (seeking == 2) {
+                if (state.mf2.length() > 1) {
+                    index = randomness::u64_range(0, state.mf2.length());
+                    matched = *state.mf2.borrow(index);
+                    if (matched == profile) {
+                        clashed = 2;
+                        // if(state.mf2.length() == 2){
+                        //     if(index == 0){
+                        //         matched = *state.mf2.borrow(1);
+                        //     }else{
+                        //         matched = *state.mf2.borrow(0);
+                        //     }
+                        // }else{
+                        //     if(index == 0){
+                        //         index = randomness::u64_range(1, state.mf2.length());
+                        //         matched = *state.mf2.borrow(index);
+                        //     }else if(index == state.mf2.length()-1){
+                        //         index = randomness::u64_range(1, state.mf2.length()-1);
+                        //         matched = *state.mf2.borrow(index);
+                        //     }else{
+                        //         let left = randomness::u64_range(0, index);
+                        //         let right = randomness::u64_range(index + 1, state.mf2.length());
+                        //         let rand = randomness::u64_range(0, 2);
+                        //         if(rand == 0){
+                        //             matched = *state.mf2.borrow(left);
+                        //         }else{
+                        //             matched = *state.mf2.borrow(right);
+                        //         }
+                        //     }
+                        // }
+                    }
+                }
+            }else if (seeking == 1) {
+                if (gender) {
+                    //11
+                    if (state.m1.length() != 0) {
+                        index = randomness::u64_range(0, state.m1.length());
+                        matched = *state.m1.borrow(index);
+                        if (matched == profile) {
+                            clashed = 1;
                         }
-                    }else{
-                        if(index == 0){
-                            index = randomness::u64_range(1, state.mf2.length());
-                            matched = *state.mf2.borrow(index);
-                        }else if(index == state.mf2.length()-1){
-                            index = randomness::u64_range(1, state.mf2.length()-1);
-                            matched = *state.mf2.borrow(index);
-                        }else{
-                            let left = randomness::u64_range(0, index);
-                            let right = randomness::u64_range(index + 1, state.mf2.length());
-                            let rand = randomness::u64_range(0, 2);
-                            if(rand == 0){
-                                matched = *state.mf2.borrow(left);
-                            }else{
-                                matched = *state.mf2.borrow(right);
-                            }
+                    }
+                }
+                else {
+                    //01
+                    if (state.m0.length() != 0) {
+                        index = randomness::u64_range(0, state.m0.length());
+                        matched = *state.m0.borrow(index);
+                    }
+                }
+            }else {
+                if (gender) {
+                    //10
+                    if (state.f1.length() != 0) {
+                        index = randomness::u64_range(0, state.f1.length());
+                        matched = *state.f1.borrow(index);
+                    }
+                }
+                else {
+                    //00
+                    if (state.f0.length() != 0) {
+                        index = randomness::u64_range(0, state.f0.length());
+                        matched = *state.f0.borrow(index);
+                        if (matched == profile) {
+                            clashed = 0;
                         }
-                    };
+                    }
                 }
-            }
-        }else if(seeking == 1){
-            if(gender) {
-                //11
-                if (state.m1.length() != 0) {
-                    let index = randomness::u64_range(0, state.m1.length());
-                    matched = *state.m1.borrow(index);
-                }
-            }
-            else{ //01
-                if(state.m0.length()!=0){
-                    let index = randomness::u64_range(0, state.m0.length());
-                    matched = *state.m0.borrow(index);
-                }
-            }
-        }else{
-            if(gender) {
-                //10
-                if (state.f1.length() != 0) {
-                    let index = randomness::u64_range(0, state.f1.length());
-                    matched = *state.f1.borrow(index);
-                }
-            }
-            else{ //00
-                if(state.f0.length()!=0){
-                    let index = randomness::u64_range(0, state.f0.length());
-                    matched = *state.f0.borrow(index);
-                }
-            }
-
+            };
+        };
+        if (clashed != 4){
+            matched = filter_self(clashed, index);
         };
         let match_found = if(matched != @0x0){true}else{false};
         event::emit(MatchedEvent {
@@ -350,7 +371,43 @@ module admin::date {
     //==============================================================================================
     // Helper functions
     //==============================================================================================
-
+    fun filter_self(cat: u8, index: u64): address acquires State{
+        let state = borrow_global_mut<State>(@admin);
+        let group;
+        if (cat == 0){
+            group = &state.f0;
+        }else if( cat == 1){
+            group = &state.m1;
+        }else{
+            group = &state.mf2;
+        };
+        let matched ;
+        if(group.length() == 2){
+            if(index == 0){
+                matched = *group.borrow(1);
+            }else{
+                matched = *group.borrow(0);
+            }
+        }else{
+            if(index == 0){
+                index = randomness::u64_range(1, group.length());
+                matched = *group.borrow(index);
+            }else if(index == group.length()-1){
+                index = randomness::u64_range(1, group.length()-1);
+                matched = *group.borrow(index);
+            }else{
+                let left = randomness::u64_range(0, index);
+                let right = randomness::u64_range(index + 1, group.length());
+                let rand = randomness::u64_range(0, 2);
+                if(rand == 0){
+                    matched = *group.borrow(left);
+                }else{
+                    matched = *group.borrow(right);
+                }
+            }
+        };
+        matched
+    }
     //==============================================================================================
     // View functions
     //==============================================================================================
@@ -478,6 +535,104 @@ module admin::date {
             3
         );
         assert!(state.profile_minted_events == 1, 3);
+
+    }
+
+    #[test(admin = @admin, userA = @0xA, userB = @0xB, userC = @0xC, userD = @0xD)]
+    fun test_match_success(
+        admin: &signer,
+        userA: &signer,
+        userB: &signer,
+        userC: &signer,
+        userD: &signer,
+    ) acquires State {
+        let admin_address = signer::address_of(admin);
+        let userA_address = signer::address_of(userA);
+        let userB_address = signer::address_of(userB);
+        let userC_address = signer::address_of(userC);
+        let userD_address = signer::address_of(userD);
+        account::create_account_for_test(admin_address);
+        account::create_account_for_test(userA_address);
+        account::create_account_for_test(userB_address);
+        account::create_account_for_test(userC_address);
+        account::create_account_for_test(userD_address);
+
+        let aptos_framework = account::create_account_for_test(@aptos_framework);
+        timestamp::set_time_has_started_for_testing(&aptos_framework);
+        randomness::initialize_for_testing(&aptos_framework);
+        randomness::set_seed(x"0000000000000000000000000000000000000000000000000000000000000000");
+        init_module(admin);
+
+
+        let resource_account_address = account::create_resource_address(&@admin, SEED);
+
+        let name = string::utf8(b"Bob");
+        let age: u8 = 20;
+        let gender = true; //1 for men
+        let seeking: u8 = 1;//0=women,1=men,2=both
+        let description = string::utf8(b"dev"); //limit to 100 words
+        let tg = string::utf8(b"bobtg");
+        let photo = string::utf8(b"test_photo_url");
+        mint_profile(userA,name,age,gender,seeking,description,tg,photo);
+
+        let expected_nft_token_address_A = token::create_token_address(
+            &resource_account_address,
+            &string::utf8(COLLECTION_NAME),
+            &string_utils::format1(&b"#0:{}", name)
+        );
+
+        let name = string::utf8(b"Sam");
+        let age: u8 = 22;
+        let gender = true; //1 for men
+        let seeking: u8 = 1;//0=women,1=men,2=both
+        let description = string::utf8(b"dev"); //limit to 100 words
+        let tg = string::utf8(b"samtg");
+        let photo = string::utf8(b"test_photo_url");
+        mint_profile(userB,name,age,gender,seeking,description,tg,photo);
+
+        let expected_nft_token_address_B = token::create_token_address(
+            &resource_account_address,
+            &string::utf8(COLLECTION_NAME),
+            &string_utils::format1(&b"#1:{}", name)
+        );
+
+        let name = string::utf8(b"Ken");
+        let age: u8 = 24;
+        let gender = true; //1 for men
+        let seeking: u8 = 1;//0=women,1=men,2=both
+        let description = string::utf8(b"dev"); //limit to 100 words
+        let tg = string::utf8(b"kentg");
+        let photo = string::utf8(b"test_photo_url");
+        mint_profile(userC,name,age,gender,seeking,description,tg,photo);
+
+        let expected_nft_token_address_C = token::create_token_address(
+            &resource_account_address,
+            &string::utf8(COLLECTION_NAME),
+            &string_utils::format1(&b"#2:{}", name)
+        );
+
+        let name = string::utf8(b"Tom");
+        let age: u8 = 26;
+        let gender = true; //1 for men
+        let seeking: u8 = 0;//0=women,1=men,2=both
+        let description = string::utf8(b"dev"); //limit to 100 words
+        let tg = string::utf8(b"tomtg");
+        let photo = string::utf8(b"test_photo_url");
+        mint_profile(userD,name,age,gender,seeking,description,tg,photo);
+
+        let expected_nft_token_address_D = token::create_token_address(
+            &resource_account_address,
+            &string::utf8(COLLECTION_NAME),
+            &string_utils::format1(&b"#3:{}", name)
+        );
+
+        match(userB, expected_nft_token_address_B);
+        debug::print(&string_utils::format1(&b"profileA: {}", expected_nft_token_address_A));
+        debug::print(&string_utils::format1(&b"profileB: {}", expected_nft_token_address_B));
+        debug::print(&string_utils::format1(&b"profileC: {}", expected_nft_token_address_C));
+        debug::print(&string_utils::format1(&b"profileD: {}", expected_nft_token_address_D));
+
+        // let state = borrow_global<State>(admin_address);
 
     }
 
