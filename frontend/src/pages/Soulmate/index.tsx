@@ -17,6 +17,7 @@ import { match } from "@/entry-functions/match"
 import { getTransaction } from "@/view-functions/getTransaction";
 import { MODULE_ADDRESS } from "@/constants";
 import { getExistProfileId } from "@/view-functions/getExistProfileId"
+import { useClipboard } from 'use-clipboard-copy';
 
 export const Soulmate: React.FC = () => {
   const { t } = useTranslation();
@@ -27,10 +28,10 @@ export const Soulmate: React.FC = () => {
   const navigate = useNavigate();
   const [isHovered, setIsHovered] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
-  const { toast } = useToast();
   const { account, connected, signAndSubmitTransaction } = useWallet();
-  const [showTips, setShowTips] = useState(false);
-  const [toastInstance, setToastInstance] = useState<ReturnType<typeof toast> | null>(null)
+  const { toast } = useToast();
+  const [showToast, setShowToast] = useState(false);
+  const clipboard = useClipboard();
 
   useEffect(() => {
     const fetchProfileData = async () => {
@@ -59,6 +60,15 @@ export const Soulmate: React.FC = () => {
     fetchProfileData();
   }, [id, navigate, toast]);
 
+  useEffect(() => {
+    // 页面加载3秒后自动显示toast
+    const timer = setTimeout(() => {
+      setShowToast(true);
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   const handleFindSoulmate = async () => {
     console.log('dsada', connected);
     if (!connected) {
@@ -78,6 +88,7 @@ export const Soulmate: React.FC = () => {
             const response = await signAndSubmitTransaction(payload);
             console.log('Match transaction response:', response);
             const res = await getTransaction(response?.hash || "");
+            console.log('test', res);
             if (res?.events && res?.events.length) {
               const ev = res.events.find((i:any) => i.type === `${MODULE_ADDRESS}::date::MatchedEvent`);
               if (ev.data.match_found) {
@@ -135,39 +146,52 @@ export const Soulmate: React.FC = () => {
     }
   };
 
+  useEffect(() => {
+    toast({
+      title: t("tips"),
+      description: (
+        <div className="text-2xs">
+          <p>
+            {t("have_not_found_the_right_person")}&nbsp;
+            <span 
+              className="text-pink-500 cursor-pointer hover:underline"
+              onClick={handleFindSoulmate}
+            >
+              <u className="cursor-pointer">{t("find")}</u>
+            </span> {t("the_next_person_quickly_or_get_your_card")} <span 
+              className="text-indigo-500 cursor-pointer hover:underline"
+              onClick={copyLick}
+            >
+              <u className="cursor-pointer">Link</u>
+            </span> {t("and_share_it_on_your_favorite_social_media_to_find_that_special_someone")}
+          </p>
+        </div>
+      ),
+      duration: Infinity,
+      open: true,
+      onOpenChange: (open) => setShowToast(open),
+    });
+  }, [showToast, toast]);
+
   const toggleTips = () => {
-    setShowTips(!showTips);
-    if (!showTips) {
-      const newToast = toast({
-        title: "Tips",
-        description: (
-          <div className="text-2xs">
-            <p>
-              Haven't found the right person? <span 
-                className="text-pink-500 cursor-pointer hover:underline"
-                onClick={handleFindSoulmate}
-              >
-                <u className="cursor-pointer">Find</u>
-              </span> the next person quickly🔥, or get your card <span 
-                className="text-indigo-500 cursor-pointer hover:underline"
-                onClick={() => {
-                  // Get and copy link logic here
-                  console.log('Getting and copying link');
-                }}
-              >
-                <u className="cursor-pointer">Link</u>
-              </span> and share it on your favorite social media to find that special someone!
-            </p>
-          </div>
-        ),
-        duration: Infinity,
-      });
-      setToastInstance(newToast)
-    } else if (toastInstance) {
-      toastInstance.dismiss()
-      setToastInstance(null)
+    console.log('test', showToast);
+    setShowToast((prev) => !prev);
+  }
+
+  const copyLick = async () => {
+    setIsFullScreenLoading(true);
+    const profileId = await getExistProfileId({ accountAddress: connected ? account?.address?.toString() || '' : '' });
+    setIsFullScreenLoading(false);
+    if (profileId) {
+        const link = `${window.location.origin}/soulmate/${profileId}`;
+        clipboard.copy(link);
+        toast({
+          title: t("success"),
+          description: t("link_copied_to_clipboard"),
+          variant: "default",
+        });
     }
-  };
+  }
 
   return (
     <div className="w-screen min-h-screen bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 overflow-hidden">
@@ -216,13 +240,13 @@ export const Soulmate: React.FC = () => {
                   transform: 'translateZ(20px)',
                   backgroundColor: '#FFFFFF',
                 }}
-                animate={{ scale: isHovered ? 1.05 : 1 }}
+                animate={{ scale: isHovered ? 1.03 : 1 }}
               >
                 <div className="absolute inset-0 overflow-hidden">
                   <div className="absolute inset-0 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 animate-flow"></div>
                 </div>
                 <div 
-                  className="relative w-full h-full flex flex-col justify-start items-center p-6 px-8 cursor-pointer overflow-y-auto"
+                  className="relative w-full h-full flex flex-col justify-start items-center p-4 px-8 cursor-pointer overflow-y-auto"
                   style={{
                     color: '#000000',
                     border: '2px solid #FFFFFF',
@@ -323,7 +347,7 @@ export const Soulmate: React.FC = () => {
       <Button
         variant="ghost"
         size="icon"
-        className="fixed bottom-4 right-2 bg-transparent hover:bg-transparent hidden"
+        className="fixed bottom-2 right-2 bg-transparent hover:bg-transparent cursor-pointer z-10"
         onClick={toggleTips}
       >
         <HelpCircle className="h-6 w-6 text-white" />
